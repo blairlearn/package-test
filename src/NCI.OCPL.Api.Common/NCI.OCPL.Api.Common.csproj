@@ -5,6 +5,9 @@
     <DebugType>portable</DebugType>
     <PreserveCompilationContext>true</PreserveCompilationContext>
     <AssetTargetFallback>$(PackageTargetFallback);dotnet5.6;portable-net45+win8</AssetTargetFallback>
+
+    <PackageDescription>API Common</PackageDescription>
+    <RepositoryUrl>https://github.com/blairlearn/NCI.OCPL.Api.Shared</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>

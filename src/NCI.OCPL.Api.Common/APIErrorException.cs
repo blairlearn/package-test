@@ -1,4 +1,3 @@
-
 namespace NCI.OCPL.Api.Common
 {
     /// <summary>

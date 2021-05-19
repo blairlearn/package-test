@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Reflection;
 using System.Text;
 
 using Microsoft.AspNetCore.Builder;
@@ -19,9 +18,6 @@ using NCI.OCPL.Api.Common.Models.Options;
 
 using Nest;
 using Elasticsearch.Net;
-
-using NSwag.AspNetCore;
-using NJsonSchema;
 
 namespace NCI.OCPL.Api.Common
 {
@@ -305,7 +301,7 @@ namespace NCI.OCPL.Api.Common
             }
             else
             {
-                throw new Exception("No servers configured");
+                throw new APIInternalException("No servers configured");
             }
 
             return uris;

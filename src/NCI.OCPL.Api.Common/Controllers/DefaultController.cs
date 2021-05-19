@@ -15,6 +15,7 @@ namespace NCI.OCPL.Api.Common.Controllers
   [ApiExplorerSettings(IgnoreApi = true)]
   public class DefaultController : ControllerBase
   {
+    public const int INVALID_ROUTE_STATUS_CODE = 404;
 
     /// <summary>
     /// Handle unknown routes for all the verbs.
@@ -28,7 +29,7 @@ namespace NCI.OCPL.Api.Common.Controllers
     [HttpPut("{*wildcard}")]
     public string Error()
     {
-      throw new APIErrorException(404, "Invalid Route.");
+      throw new APIErrorException(INVALID_ROUTE_STATUS_CODE, "Invalid Route.");
     }
   }
 }

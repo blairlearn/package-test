@@ -14,9 +14,9 @@ namespace NCI.OCPL.Api.Common
         public string Message { get; set; }
 
         /// <summary>
-        /// Returns a <see cref="T:System.String"/> that represents the current <see cref="T:Drug-Dictionary-API.Models.ErrorMessage"/>.
+        /// Returns a <see cref="T:System.String"/> that represents the current <see cref="T:NCI.OCPL.Api.Common.Models.ErrorMessage"/>.
         /// </summary>
-        /// <returns>A <see cref="T:System.String"/> that represents the current <see cref="T:Drug-Dictionary-API.Models.ErrorMessage"/>.</returns>
+        /// <returns>A <see cref="T:System.String"/> that represents the current <see cref="T:NCI.OCPL.Api.Common.Models.ErrorMessage"/>.</returns>
         public override string ToString()
         {
             return JsonConvert.SerializeObject(this);

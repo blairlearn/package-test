@@ -94,13 +94,18 @@ namespace NCI.OCPL.Api.Common.Testing
             this._defCallbackHandler = callback;
         }
 
-        private void ProcessRequest<TReturn>(RequestData requestData, ResponseData responseData)
+        /// !!!! DO NOT OVERRIDE THIS METHOD! !!!!
+        /// This is the shared guts of the Request/RequestAsync methods. It really ought to be private,
+        /// but the ResponseBuilder class required of those methods is static (it not only can't be mocked,
+        /// it can't even be passed in), rendering both methods untestable. Making this one protected at least
+        /// allows the real logic to be tested.
+        protected void ProcessRequest<TReturn>(RequestData requestData, ResponseData responseData)
             where TReturn : class
         {
             Type returnType = typeof(TReturn);
                 bool foundHandler = false;
 
-                // Loop through the register handlers and see if our type is registered, OR
+                // Loop through the registered handlers and see if our type is registered, OR
                 // if a base class is registered.
                 foreach (Type type in _callbackHandlers.Keys)
                 {
@@ -171,14 +176,7 @@ namespace NCI.OCPL.Api.Common.Testing
             Exception processingException = null;
             ResponseData responseData = new ResponseData();
 
-            try
-            {
-                this.ProcessRequest<TReturn>(requestData, responseData);
-            }
-            catch (System.Exception ex)
-            {
-                processingException = ex;
-            }
+            this.ProcessRequest<TReturn>(requestData, responseData);
 
             return ResponseBuilder.ToResponse<TReturn>(requestData, processingException, responseData.StatusCode, null, responseData.Stream, responseData.ResponseMimeType);
         }
@@ -188,14 +186,7 @@ namespace NCI.OCPL.Api.Common.Testing
             Exception processingException = null;
             ResponseData responseData = new ResponseData();
 
-            try
-            {
-                this.ProcessRequest<TReturn>(requestData, responseData);
-            }
-            catch (System.Exception ex)
-            {
-                processingException = ex;
-            }
+            this.ProcessRequest<TReturn>(requestData, responseData);
 
             return await ResponseBuilder.ToResponseAsync<TReturn>(requestData, processingException, responseData.StatusCode, null, responseData.Stream, responseData.ResponseMimeType, cancellationToken);
         }
@@ -205,7 +196,7 @@ namespace NCI.OCPL.Api.Common.Testing
         /// </summary>
         /// <param name="requestData">The request object</param>
         /// <returns>JObject containing the request</returns>
-        public JObject GetRequestPost(RequestData requestData)
+        public JToken GetRequestPost(RequestData requestData)
         {
             //Some requests can have this as null.  That is ok...
             if (requestData.PostData == null)
@@ -219,7 +210,7 @@ namespace NCI.OCPL.Api.Common.Testing
                 postBody = Encoding.UTF8.GetString(stream.ToArray());
             }
 
-            return JObject.Parse(postBody);
+            return JToken.Parse(postBody);
         }
     }
 }
