@@ -22,7 +22,7 @@ namespace NCI.OCPL.Api.Common.Testing
     [Fact]
     public void GetInMemoryElasticClient()
     {
-      IElasticClient client = ElasticTools.GetInMemoryElasticClient("elastic-tools-get-in-memory-client.json");
+      IElasticClient client = ElasticTools.GetInMemoryElasticClient("test-response.json");
       var response = client.SearchTemplate<TestType>(sd => sd
                 .Index("AliasName")
                 .Params(pd => pd
