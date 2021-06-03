@@ -7,27 +7,28 @@ on:
   push:
     branches:
       - master
+      - main
       - develop
       - 'hotfix/**'
       - 'release/**'
       - 'feature/**'
-  ## Any pull request. Yes the syntax looks weird
+  ## Any pull request.
   pull_request:
 
 jobs:
 
   test_build_release:
-    name: Test, Build, Publish on OS ${{ matrix.operating-system }}
+    name: Test, Build, Publish ${{ matrix.package }} on OS ${{ matrix.operating-system }}
     needs: extract_build_info
     runs-on: ${{ matrix.operating-system }}
     strategy:
       matrix:
         operating-system: [ubuntu-latest, windows-latest, macOS-latest]
+        package: [NCI.OCPL.Api.Common, NCI.OCPL.Api.Common.Testing]
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v2
         ## using latest LTS releases - also it MUST be the SDK version,
         ## which have stupidly high numbers for the patch version.
-        ## '3.1.100' breaks our app, so let's just use 2.x
       - name: Setup dotnet
         uses: actions/setup-dotnet@v1
         with:
@@ -39,37 +40,33 @@ jobs:
               if [ "$RUNNER_OS" == "Windows" ]; then
                 dotnet test
               else
-                dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=lcov /p:CoverletOutput=../../NCI.OCPL.Api.Common.lcov         test/NCI.OCPL.Api.Common.Tests
-                dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=lcov /p:CoverletOutput=../../NCI.OCPL.Api.Common.Testing.lcov test/NCI.OCPL.Api.Common.Testing.Tests
+                dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=lcov /p:CoverletOutput=../../${{matrix.package}}.lcov         test/${{matrix.package}}.Tests
               fi
         shell: bash
-      - name: Save Code Coverage Output (Common)
+      - name: Save Code Coverage Output
         uses: actions/upload-artifact@v1
         with:
           name: coverage-api-common-${{ matrix.operating-system }}
-          path: NCI.OCPL.Api.Common.lcov
-        if: matrix.operating-system != 'windows-latest'
-      - name: Save Code Coverage Output (Test tools)
-        uses: actions/upload-artifact@v1
-        with:
-          name: coverage-api-testing-${{ matrix.operating-system }}
-          path: NCI.OCPL.Api.Common.Testing.lcov
+          path: ${{matrix.package}}.lcov
         if: matrix.operating-system != 'windows-latest'
       - name: Publish
-        run: dotnet publish -c Release -o $GITHUB_WORKSPACE/out test/integration-test-harness/
+        run: dotnet publish -c Release -o $GITHUB_WORKSPACE/out src/${{matrix.package}}/
+        shell: bash
+      - name: Create NuGet package for ${{matrix.package}}
+        run: |
+          dotnet pack --configuration Release src/${{matrix.package}}
         shell: bash
       - name: Record metadata
         env:
           BUILD_INFO: ${{ toJson( needs.extract_build_info.outputs ) }}
         run: |
           echo "$BUILD_INFO"
-          mkdir $GITHUB_WORKSPACE/out/wwwroot/
-          echo "$BUILD_INFO" > $GITHUB_WORKSPACE/out/wwwroot/build-info.json
+          echo "$BUILD_INFO" > $GITHUB_WORKSPACE/out/build-info.json
         shell: bash
       - name: Upload Published Artifact
         uses: actions/upload-artifact@v1
         with:
-          name: integration-test-harness-${{ matrix.operating-system }}
+          name: ${{matrix.package}}-${{ matrix.operating-system }}
           path: out
 
   integration_tests:
@@ -78,15 +75,9 @@ jobs:
     needs: test_build_release
 
     steps:
-      - uses: actions/checkout@master
-      - name: Download Published Artifact
-        uses: actions/download-artifact@v1
-        with:
-          name: integration-test-harness-ubuntu-latest
-          path: built-api
+      - uses: actions/checkout@v2
         ## using latest LTS releases - also it MUST be the SDK version,
         ## which have stupidly high numbers for the patch version.
-        ## '3.1.100' breaks our app, so let's just use 2.x
       - name: Setup dotnet
         uses: actions/setup-dotnet@v1
         with:
@@ -95,6 +86,12 @@ jobs:
         run: |
               ## Create test output and API logging location
               mkdir -p integration-tests/target
+        # This project doesn't create an API as a deliverable artifact. In order to test the shared
+        # API components, we have to create an API specifically for testing, which means it also has
+        # to be built for the express purpose of running the integration tests.
+      - name: Build Test Harness
+        run: |
+              dotnet publish -c Release -o $GITHUB_WORKSPACE/built-api test/integration-test-harness/
       - name: Start API
         env:
           ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS: true
@@ -128,7 +125,7 @@ jobs:
               echo "API is up"
       - name: Run Integration Test
         ## Normally bash runs with -e which exits the shell upon hitting
-        ## an error which breaks our capturing of those errors.
+        ## an error which breaks our ability to capture those errors.
         shell: bash --noprofile --norc -o pipefail {0}
         run: |
               ## Run Karate
@@ -154,12 +151,51 @@ jobs:
                 echo "Tests passed"
               fi
 
+  publish_nuget_packages:
+    # Only publish packages if the run was triggered by a push to main/master.
+    if: ${{ github.event_name == 'push' && ( github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' ) }}
+
+    name: Build NuGet package for ${{matrix.package}}
+    runs-on: windows-latest
+    needs:
+      - extract_build_info
+      - test_build_release
+      - integration_tests
+    strategy:
+      matrix:
+        package:
+          - NCI.OCPL.Api.Common
+          - NCI.OCPL.Api.Common.Testing
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download Published Artifact
+        uses: actions/download-artifact@v1
+        with:
+          name: ${{matrix.package}}-windows-latest
+          path: built-api
+        ## using latest LTS releases - also it MUST be the SDK version,
+        ## which have stupidly high numbers for the patch version.
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '2.1.607'
+          source-url: https://nuget.pkg.github.com/${{env.OWNER}}/index.json
+        env:
+          NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
+          OWNER: ${{ needs.extract_build_info.outputs.repo_owner }}
+      # This outputs a bogus warning that "No API Key was provided and no API Key could be found."
+      # This is a bug in the dotnet program and not something wrong with the build process.
+      - name: Publish NuGet package for ${{matrix.package}}
+        run: |
+          dotnet nuget push src/${{matrix.package}}/bin/Release/*.nupkg
+        shell: bash
+
+
   extract_build_info:
     ## Gather metadata for the build artifact.
     ##
-    ## This is done in a separate job so we don't have to figure out how to extract the
-    ## same information on every platform.
-    ## Ideally, this should be done in a GitHub Action.
+    ## This is done in a separate job because the information is used in multiple locations.
     name: Extract build metadata.
     runs-on: ubuntu-latest
     outputs:
