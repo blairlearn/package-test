@@ -10,8 +10,6 @@ using Moq.Protected;
 using Nest;
 using Xunit;
 
-using NCI.OCPL.Api.Common.Controllers;
-
 namespace NCI.OCPL.Api.Common
 {
   /// <summary>
@@ -52,7 +50,9 @@ namespace NCI.OCPL.Api.Common
       NciStartupBase startup = mockStartup.Object;
 
       IServiceCollection svcColl = new ServiceCollection();
-      IServiceProvider serviceProvider = startup.ConfigureServices(svcColl);
+      startup.ConfigureServices(svcColl);
+
+      IServiceProvider serviceProvider = svcColl.BuildServiceProvider();
 
       // Verify the subclass had a chance to add services.
       mockStartup.Protected().Verify("AddAdditionalConfigurationMappings", Times.Once(), Moq.Protected.ItExpr.IsAny<IServiceCollection>());
@@ -85,7 +85,9 @@ namespace NCI.OCPL.Api.Common
       NciStartupBase startup = mockStartup.Object;
 
       IServiceCollection svcColl = new ServiceCollection();
-      IServiceProvider serviceProvider = startup.ConfigureServices(svcColl);
+      startup.ConfigureServices(svcColl);
+
+      IServiceProvider serviceProvider = svcColl.BuildServiceProvider();
 
       Assert.NotNull(serviceProvider);
 
@@ -122,7 +124,9 @@ namespace NCI.OCPL.Api.Common
       NciStartupBase startup = mockStartup.Object;
 
       IServiceCollection svcColl = new ServiceCollection();
-      IServiceProvider serviceProvider = startup.ConfigureServices(svcColl);
+      startup.ConfigureServices(svcColl);
+
+      IServiceProvider serviceProvider = svcColl.BuildServiceProvider();
 
       Assert.NotNull(serviceProvider);
 
@@ -163,13 +167,11 @@ namespace NCI.OCPL.Api.Common
       NciStartupBase startup = mockStartup.Object;
 
       IServiceCollection svcColl = new ServiceCollection();
-      IServiceProvider serviceProvider = startup.ConfigureServices(svcColl);
+      startup.ConfigureServices(svcColl);
+
+      IServiceProvider serviceProvider = svcColl.BuildServiceProvider();
 
       Object svc;
-
-      svc = serviceProvider.GetService(typeof(ILogger<DefaultController>));
-      Assert.NotNull(svc);
-      Assert.IsAssignableFrom<Logger<DefaultController>>(svc);
 
       svc = serviceProvider.GetService(typeof(ILogger<ElasticClient>));
       Assert.NotNull(svc);

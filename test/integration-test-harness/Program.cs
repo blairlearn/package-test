@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 using NCI.OCPL.Api.Common;
@@ -16,7 +16,7 @@ namespace integration_test_harness
     {
         public static void Main(string[] args)
         {
-            CreateWebHostBuilder<Startup>(args).Build().Run();
+            CreateHostBuilder<Startup>(args).Build().Run();
         }
     }
 }

@@ -2,15 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Reflection;
 using System.Text;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -46,7 +42,7 @@ namespace NCI.OCPL.Api.Common
     /// </summary>
     /// <returns>The services.</returns>
     /// <param name="services">Services.</param>
-    public IServiceProvider ConfigureServices(IServiceCollection services)
+    public void ConfigureServices(IServiceCollection services)
     {
       /*
         Do we still need this? Or is this .Net 1.1 code?
@@ -55,18 +51,6 @@ namespace NCI.OCPL.Api.Common
 
       //Turn on the OptionsManager that supports IOptions
       services.AddOptions();
-
-
-      /*
-        Do we still need this? Or is this .Net 1.1 code?
-      */
-      //This allows us to easily generate URLs to routes
-      services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
-      services.AddScoped<IUrlHelper>(factory =>
-      {
-        var actionContext = factory.GetService<IActionContextAccessor>().ActionContext;
-        return new UrlHelper(actionContext);
-      });
 
 
       //Add Configuration mappings.
@@ -138,9 +122,6 @@ namespace NCI.OCPL.Api.Common
           config.Description = Configuration["NSwag:Description"];
         }
       });
-
-      // Add framework services
-      return services.BuildServiceProvider();
     }
 
     /// <summary>
