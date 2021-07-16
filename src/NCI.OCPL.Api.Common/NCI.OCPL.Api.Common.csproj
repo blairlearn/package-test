@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
 
-    <Version>1.0.3</Version>
+    <Version>1.0.4</Version>
 
     <PackageDescription>Common code for use between APIs.</PackageDescription>
     <RepositoryUrl>https://github.com/NCIOCPL/NCI.OCPL.Api.Shared</RepositoryUrl>
@@ -14,6 +14,7 @@
 
     <!-- Explicit framework reference because this project builds a library to support APIs, not the actual APIs.-->
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.*" />
 
     <PackageReference Include="NEST" Version="5.6.*" />
     <PackageReference Include="NSwag.AspNetCore" Version="13.11.*" />

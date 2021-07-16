@@ -106,7 +106,8 @@ namespace NCI.OCPL.Api.Common
       services.AddCors();
 
       // Make the application's routes available.
-      services.AddControllers();
+      services.AddControllers()
+        .AddNewtonsoftJson();
 
       // Enable Swagger
       // This creates the Swagger Json
