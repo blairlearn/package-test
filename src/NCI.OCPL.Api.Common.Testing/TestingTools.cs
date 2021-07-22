@@ -84,14 +84,14 @@ namespace NCI.OCPL.Api.Common.Testing
         }
 
         /// <summary>
-        /// Gets a JSON file and parses it into a JToken structure.
+        /// Gets a JSON file and parses it into a JObject structure.
         /// </summary>
         /// <param name="testFile">Name of the file to load.</param>
-        /// <returns>A JToken structure containing the parsed data.</returns>
-        public static JToken GetDataFileAsJToken(string testFile)
+        /// <returns>A JObject structure containing the parsed data.</returns>
+        public static JObject GetDataFileAsJObject(string testFile)
         {
             string path = GetPathToTestFile(testFile);
-            return JToken.Parse(File.ReadAllText(path));
+            return JObject.Parse(File.ReadAllText(path));
         }
 
         /// <summary>
