@@ -6,16 +6,6 @@ namespace NCI.OCPL.Api.Common.Testing
 #pragma warning disable CS0618
   [ElasticsearchType(Name = "terms")]
 #pragma warning restore CS0618
-  public class TestType
-  {
-    /// <summary>
-    /// The Backend ID for this item
-    /// </summary>
-    /// <returns></returns>
-    [Text(Name = "term")]
-    public string Term { get; set; }
-
-  }
 
   public partial class ElasticToolsTest
   {
