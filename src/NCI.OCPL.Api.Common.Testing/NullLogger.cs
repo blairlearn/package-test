@@ -9,19 +9,28 @@ using System;
 
 namespace Microsoft.Extensions.Logging.Testing
 {
+    /// <summary>
+    /// A mock logger to explicitly not do anything.
+    /// </summary>
     public class NullLogger : ILogger
     {
+        /// <summary>
+        /// The logger instance.
+        /// </summary>
         public static readonly NullLogger Instance = new NullLogger();
 
+        /// <inheritdoc />
         public IDisposable BeginScope<TState>(TState state)
         {
             return NullDisposable.Instance;
         }
 
+        /// <inheritdoc />
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
         }
 
+        /// <inheritdoc />
         public bool IsEnabled(LogLevel logLevel)
         {
             return false;

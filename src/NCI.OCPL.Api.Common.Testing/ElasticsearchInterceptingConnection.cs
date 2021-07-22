@@ -11,14 +11,21 @@ using Newtonsoft.Json.Linq;
 
 namespace NCI.OCPL.Api.Common.Testing
 {
+    /// <summary>
+    /// A mock Elasticsearch connection, allowing inspection of values that would be passed
+    /// to the Elasticsearch server as well as creation of simulated responses.
+    /// </summary>
     public class ElasticsearchInterceptingConnection : IConnection
     {
         private Dictionary<Type, object> _callbackHandlers = new Dictionary<Type, object>();
         private Action<RequestData, object> _defCallbackHandler = null;
 
+        /// <summary>
+        /// For the IDispose pattern.
+        /// </summary>
         public void Dispose()
         {
-            
+
         }
 
         /// <summary>
@@ -34,7 +41,7 @@ namespace NCI.OCPL.Api.Common.Testing
             Type handlerType = null;
 
             //Loop through the register handlers and see if our type is registered, OR
-            //if a base class is registered.  
+            //if a base class is registered.
             foreach (Type type in _callbackHandlers.Keys)
             {
                 if (returnType == type || returnType.GetTypeInfo().IsSubclassOf(type))
@@ -60,6 +67,11 @@ namespace NCI.OCPL.Api.Common.Testing
             }
         }
 
+        /// <summary>
+        /// Allows for registration of a general request handler if a more specific one
+        /// isn't registered.
+        /// </summary>
+        /// <param name="callback"></param>
         public void RegisterDefaultHandler(Action<RequestData, object> callback)
         {
             if (_defCallbackHandler != null)
@@ -75,7 +87,7 @@ namespace NCI.OCPL.Api.Common.Testing
             bool foundHandler = false;
 
             //Loop through the register handlers and see if our type is registered, OR
-            //if a base class is registered.  
+            //if a base class is registered.
             foreach (Type type in _callbackHandlers.Keys)
             {
                 if (returnType == type || returnType.GetTypeInfo().IsSubclassOf(type))
@@ -110,14 +122,14 @@ namespace NCI.OCPL.Api.Common.Testing
 
             //It looks like, based on the code and use of the code, not because of actual commeents, that MadeItToResponse gets set
             //once the Connection was able to get a response from a server.  I am going to set it here, but we may need to update later
-            //if we want to test connection failures. 
+            //if we want to test connection failures.
             requestData.MadeItToResponse = true;
 
             //Basically all requests, even HEAD requests (e.g. AliasExists) need to have a stream to work correctly.
             //Note, a stream of nothing is still a stream.  So if you did not set a stream, we will do it for you.
             //I am sure this will cause issues when trying to test failures of other kinds...  Good use of 4hrs tracking
             //this stupid issue down.
-            if (builder.Stream == null) 
+            if (builder.Stream == null)
             {
                 using (MemoryStream stream = new MemoryStream(new byte[0])) {
                     builder.Stream = stream;
@@ -125,7 +137,7 @@ namespace NCI.OCPL.Api.Common.Testing
             }
         }
 
-        ElasticsearchResponse<TReturn> IConnection.Request<TReturn>(RequestData requestData)            
+        ElasticsearchResponse<TReturn> IConnection.Request<TReturn>(RequestData requestData)
         {
             ResponseBuilder<TReturn> builder = new ResponseBuilder<TReturn>(requestData);
 

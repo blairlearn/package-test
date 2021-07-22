@@ -22,10 +22,14 @@ using NJsonSchema;
 namespace NCI.OCPL.Api.Common
 {
   /// <summary>
-  /// Serves as a base for Startup classes for API microservices.
+  /// Defines the base configuration for API microservices.
   /// </summary>
   public abstract class NciStartupBase
   {
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="configuration"></param>
     public NciStartupBase(IConfiguration configuration)
     {
       Configuration = configuration;
@@ -129,6 +133,7 @@ namespace NCI.OCPL.Api.Common
     /// Configure the app.
     /// </summary>
     /// <param name="app">App.</param>
+    /// <param name="env">Hosting enviroment.</param>
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
       if (env.IsDevelopment())

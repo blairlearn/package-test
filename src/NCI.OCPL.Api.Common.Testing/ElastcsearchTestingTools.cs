@@ -10,6 +10,10 @@ namespace NCI.OCPL.Api.Common.Testing
   /// </summary>
   public static class ElastcsearchTestingTools
   {
+    /// <summary>
+    /// String for simulating an empty response from Elasticsearch.
+    /// </summary>
+    /// <value></value>
     static public string MockEmptyResponseString
     {
       get
@@ -33,6 +37,9 @@ namespace NCI.OCPL.Api.Common.Testing
       }
     }
 
+    /// <summary>
+    /// A simulated empty Elasticsearch response.
+    /// </summary>
     static public Stream MockEmptyResponse
     {
       get

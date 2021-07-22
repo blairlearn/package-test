@@ -17,7 +17,6 @@ namespace NCI.OCPL.Api.Common.Testing
         /// JSON returned by the elastic search so that we test the Nest mappings to our models.
         /// </summary>
         /// <param name="testFile"></param>
-        /// <param name="requestDataCallback"></param>
         /// <returns></returns>
         public static IElasticClient GetInMemoryElasticClient(string testFile) {
 
