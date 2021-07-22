@@ -4,6 +4,9 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 
+using Newtonsoft.Json.Linq;
+
+
 namespace NCI.OCPL.Api.Common.Testing
 {
     /// <summary>
@@ -78,6 +81,17 @@ namespace NCI.OCPL.Api.Common.Testing
                     return (T)serializer.Deserialize(xmlReader);
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets a JSON file and parses it into a JToken structure.
+        /// </summary>
+        /// <param name="testFile">Name of the file to load.</param>
+        /// <returns>A JToken structure containing the parsed data.</returns>
+        public static JToken GetDataFileAsJToken(string testFile)
+        {
+            string path = GetPathToTestFile(testFile);
+            return JToken.Parse(File.ReadAllText(path));
         }
 
         /// <summary>

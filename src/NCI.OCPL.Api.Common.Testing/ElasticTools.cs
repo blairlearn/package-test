@@ -36,5 +36,29 @@ namespace NCI.OCPL.Api.Common.Testing
             return new ElasticClient(connectionSettings);
         }
 
-    }
+        /// <summary>
+        /// Gets an ElasticClient which simulates a failed request.  Success is defined by
+        /// statuses with a 200-series response, so anything from the 400 or 503 series
+        /// should be treated as an error.
+        /// </summary>
+        /// <param name="statusCode"></param>
+        /// <returns></returns>
+        public static IElasticClient GetErrorElasticClient(int statusCode)
+        {
+          //While this has a URI, it does not matter, an InMemoryConnection never requests
+          //from the server.
+          var pool = new SingleNodeConnectionPool(new Uri("http://localhost:9200"));
+
+          //Get Response JSON
+          byte[] responseBody = new byte[0];
+
+          // Setup ElasticSearch stuff using the contents of the JSON file as the client response.
+          InMemoryConnection conn = new InMemoryConnection(responseBody, statusCode);
+
+          var connectionSettings = new ConnectionSettings(pool, conn);
+
+          return new ElasticClient(connectionSettings);
+        }
+
+  }
 }
