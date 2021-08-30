@@ -22,8 +22,7 @@ namespace NCI.OCPL.Api.Common.Testing
     {
       IElasticClient client = ElasticTools.GetErrorElasticClient(returnCode);
       Indices index = Indices.Index(new string[] { "someIndex" });
-      Types type = Types.Type(new string[] { "someType" });
-      SearchRequest request = new SearchRequest(index, type)
+      SearchRequest request = new SearchRequest(index)
       {
         Query = new TermQuery{Field = "someField", Value = "someValue"}
       };

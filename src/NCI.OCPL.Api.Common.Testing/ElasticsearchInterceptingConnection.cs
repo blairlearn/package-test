@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,8 +14,32 @@ namespace NCI.OCPL.Api.Common.Testing
     /// A mock Elasticsearch connection, allowing inspection of values that would be passed
     /// to the Elasticsearch server as well as creation of simulated responses.
     /// </summary>
-    public class ElasticsearchInterceptingConnection : IConnection
+    /// <remarks>
+    /// Use <see cref="RegisterRequestHandlerForType" /> to set simulated Elasticsearch responses.
+    /// </remarks>
+      public class ElasticsearchInterceptingConnection : IConnection
     {
+        /// <summary>
+        /// Container for simulated Elasticsearch responses.
+        /// </summary>
+        public class ResponseData
+        {
+            /// <summary>
+            /// Stream representing the response body.
+            /// </summary>
+            public Stream Stream { get; set; }
+
+            /// <summary>
+            /// The simulated Elasticsearch HTTP status code.  Required if Stream is set.
+            /// </summary>
+            public int? StatusCode { get; set; }
+
+            /// <summary>
+            /// The simulated response MIME type.
+            /// </summary>
+            public string ResponseMimeType { get; set; }
+        }
+
         private Dictionary<Type, object> _callbackHandlers = new Dictionary<Type, object>();
         private Action<RequestData, object> _defCallbackHandler = null;
 
@@ -29,12 +52,12 @@ namespace NCI.OCPL.Api.Common.Testing
         }
 
         /// <summary>
-        /// Register a Request Handler for a Given return type.
+        /// Register a Request Handler for a given return type.
         /// NOTE: DO NOT REGISTER BOTH A CLASS AND ITS BASE CLASS!!!
         /// </summary>
         /// <typeparam name="TReturn"></typeparam>
         /// <param name="callback"></param>
-        public void RegisterRequestHandlerForType<TReturn>(Action<RequestData, ResponseBuilder<TReturn>> callback)
+        public void RegisterRequestHandlerForType<TReturn>(Action<RequestData, ResponseData> callback)
             where TReturn : class
         {
             Type returnType = typeof(TReturn);
@@ -80,27 +103,32 @@ namespace NCI.OCPL.Api.Common.Testing
             this._defCallbackHandler = callback;
         }
 
-        private void ProcessRequest<TReturn>(RequestData requestData, ResponseBuilder<TReturn> builder)
+        /// !!!! DO NOT OVERRIDE THIS METHOD! !!!!
+        /// This is the shared guts of the Request/RequestAsync methods. It really ought to be private,
+        /// but the ResponseBuilder class required of those methods is static (it not only can't be mocked,
+        /// it can't even be passed in), rendering both methods untestable. Making this one protected at least
+        /// allows the real logic to be tested.
+        protected void ProcessRequest<TReturn>(RequestData requestData, ResponseData responseData)
             where TReturn : class
         {
             Type returnType = typeof(TReturn);
-            bool foundHandler = false;
+                bool foundHandler = false;
 
-            //Loop through the register handlers and see if our type is registered, OR
-            //if a base class is registered.
-            foreach (Type type in _callbackHandlers.Keys)
-            {
-                if (returnType == type || returnType.GetTypeInfo().IsSubclassOf(type))
+                // Loop through the registered handlers and see if our type is registered, OR
+                // if a base class is registered.
+                foreach (Type type in _callbackHandlers.Keys)
                 {
-                    foundHandler = true;
+                    if (returnType == type || returnType.GetTypeInfo().IsSubclassOf(type))
+                    {
+                        foundHandler = true;
 
-                    Action<RequestData, ResponseBuilder<TReturn>> callback =
-                        (Action<RequestData, ResponseBuilder<TReturn>>)_callbackHandlers[typeof(TReturn)];
+                        Action<RequestData, ResponseData> callback =
+                            (Action<RequestData, ResponseData>)_callbackHandlers[typeof(TReturn)];
 
-                    callback(
-                        requestData,
-                        builder
-                    );
+                        callback(
+                            requestData,
+                            responseData
+                        );
 
                     break;
                 }
@@ -112,7 +140,7 @@ namespace NCI.OCPL.Api.Common.Testing
                 foundHandler = true;
                 _defCallbackHandler(
                     requestData,
-                    builder
+                    responseData
                 );
             }
 
@@ -125,43 +153,59 @@ namespace NCI.OCPL.Api.Common.Testing
             //if we want to test connection failures.
             requestData.MadeItToResponse = true;
 
+            // If the dev writing the test DID provide response data, but DID NOT set a MIME type, we'll just have to
+            // assume they meant to set "applicaton/json" since that's what Elasticsearch normally sends back.
+            if (String.IsNullOrWhiteSpace(responseData.ResponseMimeType)
+                && responseData.StatusCode.HasValue
+                && responseData.Stream != null)
+            {
+                responseData.ResponseMimeType = "application/json";
+            }
+
+            // This is much friendlier than the "Attempt to read a closed stream" message that will otherwise occur.
+            if ( responseData.Stream != null && !responseData.StatusCode.HasValue)
+            {
+                throw new ArgumentException("If a response stream is set, a status code must also be set.");
+            }
+
             //Basically all requests, even HEAD requests (e.g. AliasExists) need to have a stream to work correctly.
             //Note, a stream of nothing is still a stream.  So if you did not set a stream, we will do it for you.
             //I am sure this will cause issues when trying to test failures of other kinds...  Good use of 4hrs tracking
             //this stupid issue down.
-            if (builder.Stream == null)
+            if (responseData.Stream == null)
             {
                 using (MemoryStream stream = new MemoryStream(new byte[0])) {
-                    builder.Stream = stream;
+                    responseData.Stream = stream;
                 }
             }
         }
 
-        ElasticsearchResponse<TReturn> IConnection.Request<TReturn>(RequestData requestData)
+        TReturn IConnection.Request<TReturn>(RequestData requestData)
         {
-            ResponseBuilder<TReturn> builder = new ResponseBuilder<TReturn>(requestData);
+            Exception processingException = null;
+            ResponseData responseData = new ResponseData();
 
-            this.ProcessRequest<TReturn>(requestData, builder);
+            this.ProcessRequest<TReturn>(requestData, responseData);
 
-            return builder.ToResponse();
+            return ResponseBuilder.ToResponse<TReturn>(requestData, processingException, responseData.StatusCode, null, responseData.Stream, responseData.ResponseMimeType);
         }
 
-        async Task<ElasticsearchResponse<TReturn>> IConnection.RequestAsync<TReturn>(RequestData requestData, System.Threading.CancellationToken cancellationToken)
+        async Task<TReturn> IConnection.RequestAsync<TReturn>(RequestData requestData, System.Threading.CancellationToken cancellationToken)
         {
+            Exception processingException = null;
+            ResponseData responseData = new ResponseData();
 
-            ResponseBuilder<TReturn> builder = new ResponseBuilder<TReturn>(requestData, cancellationToken);
+            this.ProcessRequest<TReturn>(requestData, responseData);
 
-            this.ProcessRequest<TReturn>(requestData, builder);
-
-            return await builder.ToResponseAsync().ConfigureAwait(false);
+            return await ResponseBuilder.ToResponseAsync<TReturn>(requestData, processingException, responseData.StatusCode, null, responseData.Stream, responseData.ResponseMimeType, cancellationToken);
         }
 
         /// <summary>
-        /// Helper function to extract the postbody (as JObject) from a request.
+        /// Helper function to extract the body of a request that would be sent to the Elasticsearch server.
         /// </summary>
-        /// <param name="requestData"></param>
-        /// <returns></returns>
-        public JObject GetRequestPost(RequestData requestData)
+        /// <param name="requestData">The request object</param>
+        /// <returns>JObject containing the request</returns>
+        public JToken GetRequestPost(RequestData requestData)
         {
             //Some requests can have this as null.  That is ok...
             if (requestData.PostData == null)
@@ -171,15 +215,11 @@ namespace NCI.OCPL.Api.Common.Testing
 
             using (MemoryStream stream = new MemoryStream())
             {
-
-                //requestData.PostBody
                 requestData.PostData.Write(stream, requestData.ConnectionSettings);
-
                 postBody = Encoding.UTF8.GetString(stream.ToArray());
-
             }
 
-            return JObject.Parse(postBody);
+            return JToken.Parse(postBody);
         }
     }
 }
