@@ -76,6 +76,16 @@ jobs:
     name: Run Integration Tests (on Linux)
     runs-on: ubuntu-latest
     needs: test_build_release
+    services:
+      elasticsearch:
+        image: elasticsearch:7.9.2
+        env:
+          ## Pass elasticsearch options via environment variables.
+          discovery.type: single-node
+        ports:
+          ## NOTE: This will be exposed as a random port referenced below by job.services.elasticsearch.ports[9200]
+          - 9200/tcp
+        options: --health-cmd="curl http://localhost:9200/_cluster/health" --health-interval=10s --health-timeout=5s --health-retries=10
 
     steps:
       - uses: actions/checkout@v2
@@ -88,6 +98,15 @@ jobs:
         run: |
               ## Create test output and API logging location
               mkdir -p integration-tests/target
+      - name: Load Data into elasticsearch & prepare for tests
+        env:
+          ELASTIC_SEARCH_HOST: http://localhost:${{ job.services.elasticsearch.ports[9200] }}
+        run: |
+              ## Create test output and API logging location
+              mkdir -p integration-tests/target
+
+              ## Load the elasticsearch data
+              ./integration-tests/bin/load-integration-data.sh
         # This project doesn't create an API as a deliverable artifact. In order to test the shared
         # API components, we have to create an API specifically for testing, which means it also has
         # to be built for the express purpose of running the integration tests.
@@ -96,6 +115,7 @@ jobs:
               dotnet publish -c Release -o $GITHUB_WORKSPACE/built-api test/integration-test-harness/
       - name: Start API
         env:
+          Elasticsearch__Servers: http://localhost:${{ job.services.elasticsearch.ports[9200] }}
           ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS: true
           API_URL: http://localhost:5000
           SLEEP_TIMEOUT: 5

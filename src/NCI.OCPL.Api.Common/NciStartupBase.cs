@@ -14,10 +14,9 @@ using Microsoft.Extensions.Hosting;
 using NCI.OCPL.Api.Common.Models.Options;
 
 using Nest;
+using Nest.JsonNetSerializer;
 using Elasticsearch.Net;
 
-using NSwag.AspNetCore;
-using NJsonSchema;
 
 namespace NCI.OCPL.Api.Common
 {
@@ -92,7 +91,7 @@ namespace NCI.OCPL.Api.Common
         var connectionPool = new SniffingConnectionPool(uris);
 
         //Return a new instance of an ElasticClient with our settings
-        ConnectionSettings settings = new ConnectionSettings(connectionPool);
+        ConnectionSettings settings = new ConnectionSettings(connectionPool, sourceSerializer: JsonNetSerializer.Default);
 
         //Let's only try and use credentials if the username is set.
         if (!string.IsNullOrWhiteSpace(username))
