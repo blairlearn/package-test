@@ -1,8 +1,8 @@
 using System;
-using System.Collections.Generic;
 
 using Elasticsearch.Net;
 using Nest;
+using Nest.JsonNetSerializer;
 
 namespace NCI.OCPL.Api.Common.Testing
 {
@@ -30,7 +30,7 @@ namespace NCI.OCPL.Api.Common.Testing
             // Setup ElasticSearch stuff using the contents of the JSON file as the client response.
             InMemoryConnection conn = new InMemoryConnection(responseBody);
 
-            var connectionSettings = new ConnectionSettings(pool, conn);
+            var connectionSettings = new ConnectionSettings(pool, conn, sourceSerializer: JsonNetSerializer.Default);
 
             return new ElasticClient(connectionSettings);
         }
@@ -54,7 +54,7 @@ namespace NCI.OCPL.Api.Common.Testing
           // Setup ElasticSearch stuff using the contents of the JSON file as the client response.
           InMemoryConnection conn = new InMemoryConnection(responseBody, statusCode);
 
-          var connectionSettings = new ConnectionSettings(pool, conn);
+          var connectionSettings = new ConnectionSettings(pool, conn, sourceSerializer: JsonNetSerializer.Default);
 
           return new ElasticClient(connectionSettings);
         }

@@ -1,6 +1,25 @@
 version: "3.7"
 
 services:
+    elasticsearch:
+        image: elasticsearch:7.9.2
+        ## All of the ES settings can be set via the environment
+        ## vars.
+        environment:
+            - discovery.type=single-node
+            - ES_JAVA_OPTS=-Xms750m -Xmx750m
+        ## These exposed ports are for debugging only. .NET +
+        ## Docker + MacOS == bad scene. (.NET always wants to
+        ## use the hosts name, and on a mac that is actually
+        ## a virtual machine, and not on the same network.)
+        ports:
+            - "9200:9200"
+            - "9300:9300"
+        networks:
+            api-common:
+                aliases:
+                    - elasticsearch
+
     api:
         build:
             ## We need the context of our build to be the root of the
@@ -15,9 +34,11 @@ services:
         ## for elasticsearch to be running, just that the
         ## elasticsearch container should be running first.
         networks:
-            listingpagesapi:
+            api-common:
                 aliases:
                     - api
+        depends_on:
+          - elasticsearch
 
     ## Commenting out the test container as there seem to be some
     ## performance issues with Karate + API + ES running in docker.
@@ -34,7 +55,7 @@ services:
     #     ## for elasticsearch to be running, just that the
     #     ## elasticsearch container should be running first.
     #     networks:
-    #         listingpagesapi:
+    #         api-common:
     #             aliases:
     #                 - tester
     #     depends_on:
@@ -42,4 +63,4 @@ services:
     #         - api
 
 networks:
-  listingpagesapi:
+  api-common:

@@ -1,0 +1,4 @@
+{"index": {"_index": "test-index-v1", "_id": "simple-string"}}
+{"default": "Default serialization", "custom": "simple-string-value"}
+{"index": {"_index": "test-index-v1", "_id": "has-array"}}
+{"default": "Default serialization", "custom": ["first-string-value", "second-string-value"]}

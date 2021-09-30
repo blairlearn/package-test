@@ -1,0 +1,15 @@
+{
+  "settings": {
+    "number_of_shards": 1
+  },
+  "mappings": {
+    "properties": {
+      "default": {
+        "type": "keyword"
+      },
+      "custom": {
+        "type": "keyword"
+      }
+    }
+  }
+}

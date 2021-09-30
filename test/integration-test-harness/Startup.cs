@@ -37,6 +37,7 @@ namespace integration_test_harness
     /// <param name="services">Services.</param>
     protected override void AddAdditionalConfigurationMappings(IServiceCollection services)
     {
+      services.Configure<ESIndexOptions>(Configuration.GetSection("TestIndexOptions"));
     }
 
     /// <summary>

@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using NCI.OCPL.Api.Common;
 
-namespace NCI.OCPL.Api.Common.Controllers
+namespace integration_test_harness.Controllers
 {
   /// <summary>
   /// Controller for testing that the default route doesn't break known routes.

@@ -4,7 +4,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
-    <Version>2.0.2</Version>
+    <Version>2.0.3</Version>
 
     <PackageDescription>Shared helper code for unit testing.</PackageDescription>
     <RepositoryUrl>https://github.com/NCIOCPL/NCI.OCPL.Api.Shared</RepositoryUrl>
@@ -15,6 +15,7 @@
   <ItemGroup>
     <PackageReference Include="NEST" Version="7.9.*" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.*" />
+    <PackageReference Include="NEST.JsonNetSerializer" Version="7.9.*" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.*" />
   </ItemGroup>
 </Project>
