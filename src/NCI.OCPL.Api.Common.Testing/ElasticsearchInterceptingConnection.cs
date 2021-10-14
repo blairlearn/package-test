@@ -22,8 +22,10 @@ namespace NCI.OCPL.Api.Common.Testing
         /// <summary>
         /// Container for simulated Elasticsearch responses.
         /// </summary>
-        public class ResponseData
+        public class ResponseData : IDisposable
         {
+            private bool disposed;
+
             /// <summary>
             /// Stream representing the response body.
             /// </summary>
@@ -38,6 +40,34 @@ namespace NCI.OCPL.Api.Common.Testing
             /// The simulated response MIME type.
             /// </summary>
             public string ResponseMimeType { get; set; }
+
+            /// <summary>
+            /// For the IDispose pattern.
+            /// </summary>
+            protected virtual void Dispose(bool disposing)
+            {
+              if (!disposed)
+              {
+                if (disposing)
+                {
+                  Stream.Dispose();
+                }
+
+                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
+                // TODO: set large fields to null
+                disposed = true;
+              }
+            }
+
+            /// <summary>
+            /// For the IDispose pattern.
+            /// </summary>
+            public void Dispose()
+            {
+              // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+              Dispose(disposing: true);
+              GC.SuppressFinalize(this);
+            }
         }
 
         private Dictionary<Type, object> _callbackHandlers = new Dictionary<Type, object>();
@@ -183,21 +213,23 @@ namespace NCI.OCPL.Api.Common.Testing
         TReturn IConnection.Request<TReturn>(RequestData requestData)
         {
             Exception processingException = null;
-            ResponseData responseData = new ResponseData();
+            using(ResponseData responseData = new ResponseData())
+            {
+              this.ProcessRequest<TReturn>(requestData, responseData);
 
-            this.ProcessRequest<TReturn>(requestData, responseData);
-
-            return ResponseBuilder.ToResponse<TReturn>(requestData, processingException, responseData.StatusCode, null, responseData.Stream, responseData.ResponseMimeType);
+              return ResponseBuilder.ToResponse<TReturn>(requestData, processingException, responseData.StatusCode, null, responseData.Stream, responseData.ResponseMimeType);
+            }
         }
 
         async Task<TReturn> IConnection.RequestAsync<TReturn>(RequestData requestData, System.Threading.CancellationToken cancellationToken)
         {
             Exception processingException = null;
-            ResponseData responseData = new ResponseData();
+            using( ResponseData responseData = new ResponseData())
+            {
+              this.ProcessRequest<TReturn>(requestData, responseData);
 
-            this.ProcessRequest<TReturn>(requestData, responseData);
-
-            return await ResponseBuilder.ToResponseAsync<TReturn>(requestData, processingException, responseData.StatusCode, null, responseData.Stream, responseData.ResponseMimeType, cancellationToken);
+              return await ResponseBuilder.ToResponseAsync<TReturn>(requestData, processingException, responseData.StatusCode, null, responseData.Stream, responseData.ResponseMimeType, cancellationToken);
+            }
         }
 
         /// <summary>
