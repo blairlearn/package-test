@@ -105,6 +105,18 @@ namespace NCI.OCPL.Api.Common
       //Add in Application specific services
       AddAppServices(services);
 
+      // Don't set up the ESHealthCheck service unless the application registers
+      // a handler to create instances of IESAliasName. Without this check, an
+      // exception will occur during initialization because there's no way to resolve
+      // the dependency. Doing it this way allows us to make it optional.
+      if(services.Any(svc => svc.ServiceType == typeof(IESAliasNameProvider)))
+      {
+        services.AddTransient<IHealthCheckService, ESHealthCheckService>();
+      }
+
+
+
+
       // Create CORS policies.
       services.AddCors();
 

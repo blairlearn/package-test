@@ -178,5 +178,105 @@ namespace NCI.OCPL.Api.Common
       Assert.IsAssignableFrom<Logger<ElasticClient>>(svc);
     }
 
+    /// <summary>
+    /// Verify that HealthService is not reqistered if no alias name provider
+    /// is registered.
+    /// </summary>
+    [Fact]
+    public void ConfigureServices_HealthServiceNoAliasName()
+    {
+      string settings = @"
+        {
+          ""Elasticsearch"": {
+            ""Servers"": ""http://localhost:9200"",
+            ""Userid"": """",
+            ""Password"":  """",
+            ""MaximumRetries"": 5
+          },
+          ""Logging"": {
+            ""LogLevel"": {
+              ""Default"": ""Warning""
+            }
+          }
+        }";
+
+      ConfigurationBuilder builder = new ConfigurationBuilder();
+      builder.AddJsonStream(new MemoryStream(Encoding.UTF8.GetBytes(settings)));
+      IConfiguration config = builder.Build();
+
+      Mock<NciStartupBase> mockStartup = new Mock<NciStartupBase>(config) { CallBase = true };
+
+      mockStartup.Protected().Setup("AddAdditionalConfigurationMappings", Moq.Protected.ItExpr.IsAny<IServiceCollection>());
+
+      NciStartupBase startup = mockStartup.Object;
+
+      IServiceCollection svcColl = new ServiceCollection();
+      startup.ConfigureServices(svcColl);
+
+      IServiceProvider serviceProvider = svcColl.BuildServiceProvider();
+
+      Object svc;
+
+      // No IESAliasNameProvider handler was registered, so IHealthCheckService is not supposed to be available.
+      svc = serviceProvider.GetService(typeof(IHealthCheckService));
+
+      Assert.Null(svc);
+    }
+
+    /// <summary>
+    /// Verify that HealthService is reqistered when an alias name provider
+    /// is registered.
+    /// </summary>
+    [Fact]
+    public void ConfigureServices_HealthServiceWithAliasName()
+    {
+      string settings = @"
+        {
+          ""Elasticsearch"": {
+            ""Servers"": ""http://localhost:9200"",
+            ""Userid"": """",
+            ""Password"":  """",
+            ""MaximumRetries"": 5
+          },
+          ""Logging"": {
+            ""LogLevel"": {
+              ""Default"": ""Warning""
+            }
+          }
+        }";
+
+      ConfigurationBuilder builder = new ConfigurationBuilder();
+      builder.AddJsonStream(new MemoryStream(Encoding.UTF8.GetBytes(settings)));
+      IConfiguration config = builder.Build();
+
+      Mock<IESAliasNameProvider> mockNameProvider = new Mock<IESAliasNameProvider>();
+      mockNameProvider.Setup( p => p.Name).Returns("testAlias");
+
+
+      Mock<NciStartupBase> mockStartup = new Mock<NciStartupBase>(config) { CallBase = true };
+
+      mockStartup.Protected().Setup("AddAdditionalConfigurationMappings", Moq.Protected.ItExpr.IsAny<IServiceCollection>());
+
+      // Set up a handler for IESAliasNameProvider.
+      mockStartup.Protected().Setup("AddAppServices", Moq.Protected.ItExpr.IsAny<IServiceCollection>())
+        .Callback((IServiceCollection svc) => svc.AddTransient<IESAliasNameProvider>( p => mockNameProvider.Object));
+
+      NciStartupBase startup = mockStartup.Object;
+
+      IServiceCollection svcColl = new ServiceCollection();
+      startup.ConfigureServices(svcColl);
+
+      IServiceProvider serviceProvider = svcColl.BuildServiceProvider();
+
+      Object svc;
+
+      // No IESAliasNameProvider handler was registered, so IHealthCheckService is not supposed to be available.
+      svc = serviceProvider.GetService(typeof(IHealthCheckService));
+
+      Assert.NotNull(svc);
+      Assert.IsType<ESHealthCheckService>(svc);
+
+      mockNameProvider.VerifyGet(p => p.Name);
+    }
   }
 }
