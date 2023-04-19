@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -46,6 +47,11 @@ namespace integration_test_harness
     /// <param name="services">Services.</param>
     protected override void AddAppServices(IServiceCollection services)
     {
+      services.AddTransient<IESAliasNameProvider>(p => {
+        string alias = Configuration["TestIndexOptions:AliasName"];
+        return new ESAliasNameProvider(){Name= alias};
+      });
+
     }
 
     /*****************************
