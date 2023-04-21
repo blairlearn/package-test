@@ -68,7 +68,7 @@ jobs:
         # Add the NuGet package to the build artifact.
       - name: Create NuGet package for ${{matrix.package}}
         run: |
-          dotnet pack --configuration Release --output $GITHUB_WORKSPACE/out src/${{matrix.package}} --include-symbols --include-source
+          dotnet pack --configuration Release --output $GITHUB_WORKSPACE/out src/${{matrix.package}}
         shell: bash
 
       - name: Record metadata
