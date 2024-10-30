@@ -280,10 +280,15 @@ jobs:
           name: ${{matrix.package}}-windows-latest
           path: ${{ github.workspace }}
 
+      - name: Download global.json
+        uses: actions/checkout@v4
+        with:
+          path: source
+
       - name: Setup dotnet
         uses: actions/setup-dotnet@v4
         with:
-          global-json-file: global.json
+          global-json-file: source/global.json
           source-url: "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json"
         env:
           NUGET_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
