@@ -31,8 +31,7 @@ jobs:
     runs-on: ${{ matrix.operating-system }}
     strategy:
       matrix:
-        # Run on macos 13 because there was no arm support in .Net 3.1.1
-        operating-system: [ubuntu-latest, windows-latest, macos-13]
+        operating-system: [ubuntu-latest, windows-latest, macos-latest]
         package: [NCI.OCPL.Api.Common, NCI.OCPL.Api.Common.Testing]
 
     steps:

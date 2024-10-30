@@ -217,7 +217,7 @@ namespace NCI.OCPL.Api.Common
             // we should remove this and test to see if it works without the hack.
             if (context.Request.Headers.ContainsKey("Origin"))
             {
-              context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+              context.Response.Headers["Access-Control-Allow-Origin"] = "*";
             }
 
             await context.Response.Body.WriteAsync(contents, 0, contents.Length);
