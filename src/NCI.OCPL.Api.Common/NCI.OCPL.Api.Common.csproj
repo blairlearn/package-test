@@ -7,7 +7,7 @@
     <Version>3.0.0</Version>
 
     <PackageDescription>Common code for use between APIs.</PackageDescription>
-    <RepositoryUrl>https://github.com/NCIOCPL/NCI.OCPL.Api.Shared</RepositoryUrl>
+    <RepositoryUrl>https://github.com/blairlearn/package-test</RepositoryUrl>
     <Authors>National Cancer Institute - Office of Communications and Public Liaison</Authors>
   </PropertyGroup>
 
