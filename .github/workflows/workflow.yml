@@ -271,6 +271,8 @@ jobs:
         package:
           - NCI.OCPL.Api.Common
           - NCI.OCPL.Api.Common.Testing
+    permissions:
+      packages: write
 
     steps:
       - name: Download Published Artifact
